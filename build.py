@@ -171,36 +171,48 @@ for i, (cx, cy) in enumerate(rib_positions):
     print(f"  Rib {i+1}: @ ({cx:.0f}, {cy:.0f})")
 
 # ═══════════════════════════════════════════════════════
-#  RADIAL RIBS  (extracted from planar face clusters)
+# ═══════════════════════════════════════════════════════
+#  BOTTOM TAB  (at 60°, extracted from planar face cluster)
 # ═══════════════════════════════════════════════════════
 
-print("\n─── Radial Ribs ───")
+print("\n─── Bottom Tab ───")
 
 by_normal = defaultdict(list)
-for f in ref.Shape.Faces:
+for i, f in enumerate(ref.Shape.Faces):
     if type(f.Surface).__name__ != 'Plane':
         continue
     n = f.Surface.Axis
     if abs(n.z) > 0.99 or f.Area < 15:
         continue
-    by_normal[(round(n.x, 2), round(n.y, 2), round(n.z, 2))].append(f)
+    by_normal[(round(n.x, 2), round(n.y, 2), round(n.z, 2))].append((i, f))
 
-rib_count = 0
-for (nx, ny, nz), faces in sorted(by_normal.items(), key=lambda x: -len(x[1])):
-    if len(faces) < 2:
-        continue
+for (nx, ny, nz), faces in by_normal.items():
     angle = round(math.degrees(math.atan2(ny, nx)))
-    if angle != 60:  # keep only the 60° rib
+    if angle != 60 or len(faces) < 2:
         continue
-    try:
-        compound = Part.Compound(faces)
-        extruded = compound.extrude(Base.Vector(nx * 2, ny * 2, 0))
-        add_part(extruded, f"🏗️ Radial Rib @ {angle}°")
-        rib_count += 1
-    except:
-        pass
+    
+    idxs = sorted([idx+1 for idx, _ in faces])  # GUI face numbers
+    print(f"  Source STEP faces: {idxs}")
+    
+    compound = Part.Compound([f for _, f in faces])
+    tab = compound.extrude(Base.Vector(nx * 2, ny * 2, 0))
+    add_part(tab, f"Bottom Tab")
+    
+    print(f"  Tab added from {len(faces)} faces")
+    break
 
-print(f"  {rib_count} ribs extracted")
+# ═══════════════════════════════════════════════════════
+#  TABS — from specific original STEP faces
+# ═══════════════════════════════════════════════════════
+
+print("\n─── Tabs from STEP faces ───")
+
+tab_faces_gui = [43, 46, 50, 49, 45, 44, 36, 37, 41, 35]
+tab_faces = [ref.Shape.Faces[i-1] for i in tab_faces_gui]
+compound = Part.Compound(tab_faces)
+compound.translate(Base.Vector(0, 0, -2.0))  # match Main Body bottom at Z=-2
+add_part(compound, f"Tabs (faces {tab_faces_gui})")
+print(f"  Added compound, moved to Z=-2")
 
 # ═══════════════════════════════════════════════════════
 #  CHAMFERS
