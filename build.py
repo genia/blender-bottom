@@ -174,45 +174,106 @@ for i, (cx, cy) in enumerate(rib_positions):
 # ═══════════════════════════════════════════════════════
 #  BOTTOM TAB  (at 60°, extracted from planar face cluster)
 # ═══════════════════════════════════════════════════════
+#  BOTTOM TAB  — built from explicit vertex constants
+#  Faces correspond to original STEP faces 35,36,37,41,43,44,45,46,49,50
+# ═══════════════════════════════════════════════════════
 
 print("\n─── Bottom Tab ───")
 
-by_normal = defaultdict(list)
-for i, f in enumerate(ref.Shape.Faces):
-    if type(f.Surface).__name__ != 'Plane':
-        continue
-    n = f.Surface.Axis
-    if abs(n.z) > 0.99 or f.Area < 15:
-        continue
-    by_normal[(round(n.x, 2), round(n.y, 2), round(n.z, 2))].append((i, f))
+# Vertex data extracted from original STEP (X, Y, Z in mm)
+# Face 35 (Plane, area=67.85) — side wall
+f35 = [
+    (25.3122, 29.842, 6.0),
+    (29.5529, 37.1871, 6.0),
+    (29.5529, 37.1871, 14.0),
+    (25.3122, 29.842, 14.0),
+]
+# Face 36 — rectangle closing bottom of the 3 side walls at Z=6
+f36 = [
+    (13.1878, 36.842, 6.0),
+    (25.3122, 29.842, 6.0),
+    (29.5529, 37.1871, 6.0),
+    (17.4285, 44.1871, 6.0),
+]
+# Face 37 (Plane, area=67.85) — side wall
+f37 = [
+    (13.1878, 36.842, 6.0),
+    (17.4285, 44.1871, 6.0),
+    (17.4285, 44.1871, 14.0),
+    (13.1878, 36.842, 14.0),
+]
+# Face 41 (Plane, area=112.00) — side wall
+f41 = [
+    (25.3122, 29.842, 6.0),
+    (13.1878, 36.842, 6.0),
+    (13.1878, 36.842, 14.0),
+    (25.3122, 29.842, 14.0),
+]
+# Face 43 (Plane, area=49.50) — inner chamfer key side
+f43 = [
+    (24.3971, 33.257, 3.0),
+    (24.3971, 33.257, 6.0),
+    (16.6029, 37.757, 6.0),
+    (16.6029, 37.757, 0.0),
+    (21.799, 34.757, 0.0),
+]
+# Face 44 (Plane, area=12.00)
+f44 = [
+    (17.6029, 39.4891, 0.0),
+    (17.6029, 39.4891, 6.0),
+    (16.6029, 37.757, 6.0),
+    (16.6029, 37.757, 0.0),
+]
+# Face 45 (Plane, area=49.50) — outer chamfer key side
+f45 = [
+    (25.3971, 34.9891, 3.0),
+    (25.3971, 34.9891, 6.0),
+    (17.6029, 39.4891, 6.0),
+    (17.6029, 39.4891, 0.0),
+    (22.799, 36.4891, 0.0),
+]
+# Face 46 (Plane, area=6.00)
+f46 = [
+    (25.3971, 34.9891, 3.0),
+    (25.3971, 34.9891, 6.0),
+    (24.3971, 33.257, 6.0),
+    (24.3971, 33.257, 3.0),
+]
+# Face 49 (Plane, area=12.00)
+f49 = [
+    (21.799, 34.757, 0.0),
+    (16.6029, 37.757, 0.0),
+    (17.6029, 39.4891, 0.0),
+    (22.799, 36.4891, 0.0),
+]
+# Face 50 (Plane, area=8.49)
+f50 = [
+    (24.3971, 33.257, 3.0),
+    (21.799, 34.757, 0.0),
+    (22.799, 36.4891, 0.0),
+    (25.3971, 34.9891, 3.0),
+]
 
-for (nx, ny, nz), faces in by_normal.items():
-    angle = round(math.degrees(math.atan2(ny, nx)))
-    if angle != 60 or len(faces) < 2:
-        continue
-    
-    idxs = sorted([idx+1 for idx, _ in faces])  # GUI face numbers
-    print(f"  Source STEP faces: {idxs}")
-    
-    compound = Part.Compound([f for _, f in faces])
-    tab = compound.extrude(Base.Vector(nx * 2, ny * 2, 0))
-    add_part(tab, f"Bottom Tab")
-    
-    print(f"  Tab added from {len(faces)} faces")
-    break
+# Build 8 faces from constants, pull f43/f45 from STEP
+all_faces_data = [
+    ("f35", f35), ("f36", f36), ("f37", f37), ("f41", f41),
+    ("f44", f44), ("f46", f46), ("f49", f49), ("f50", f50),
+]
+face_wires = []
+for name, verts in all_faces_data:
+    pts = [Base.Vector(x, y, z) for x, y, z in verts]
+    edges = [Part.LineSegment(pts[i], pts[(i+1) % len(pts)]).toShape() for i in range(len(pts))]
+    wire = Part.Wire(edges)
+    face_wires.append(Part.Face(wire))
 
-# ═══════════════════════════════════════════════════════
-#  TABS — from specific original STEP faces
-# ═══════════════════════════════════════════════════════
+# f43 and f45 pulled directly from STEP (pentagons fail with makePolygon)
+face_wires.append(ref.Shape.Faces[42])  # Face 43
+face_wires.append(ref.Shape.Faces[44])  # Face 45
 
-print("\n─── Tabs from STEP faces ───")
-
-tab_faces_gui = [43, 46, 50, 49, 45, 44, 36, 37, 41, 35]
-tab_faces = [ref.Shape.Faces[i-1] for i in tab_faces_gui]
-compound = Part.Compound(tab_faces)
-compound.translate(Base.Vector(0, 0, -2.0))  # match Main Body bottom at Z=-2
-add_part(compound, f"Tabs (faces {tab_faces_gui})")
-print(f"  Added compound, moved to Z=-2")
+compound = Part.Compound(face_wires)
+compound.translate(Base.Vector(0, 0, -2.0))
+add_part(compound, "Bottom Tab")
+print(f"  Built from {len(face_wires)} faces, at Z=-2")
 
 # ═══════════════════════════════════════════════════════
 #  CHAMFERS
