@@ -183,60 +183,60 @@ print("\n─── Bottom Tab ───")
 # Vertex data extracted from original STEP (X, Y, Z in mm)
 # Face 35 (Plane, area=67.85) — side wall
 f35 = [
-    (25.3122, 29.842, 6.0),
-    (29.5529, 37.1871, 6.0),
-    (29.5529, 37.1871, 14.0),
-    (25.3122, 29.842, 14.0),
+    (25.3122, 29.842, 8.0),
+    (29.5529, 37.1871, 8.0),
+    (29.5529, 37.1871, 15.0),
+    (25.3122, 29.842, 15.0),
 ]
 # Face 36 — rectangle closing bottom of the 3 side walls at Z=6
 f36 = [
-    (13.1878, 36.842, 6.0),
-    (25.3122, 29.842, 6.0),
-    (29.5529, 37.1871, 6.0),
-    (17.4285, 44.1871, 6.0),
+    (13.1878, 36.842, 8.0),
+    (25.3122, 29.842, 8.0),
+    (29.5529, 37.1871, 8.0),
+    (17.4285, 44.1871, 8.0),
 ]
 # Face 37 (Plane, area=67.85) — side wall
 f37 = [
-    (13.1878, 36.842, 6.0),
-    (17.4285, 44.1871, 6.0),
-    (17.4285, 44.1871, 14.0),
-    (13.1878, 36.842, 14.0),
+    (13.1878, 36.842, 8.0),
+    (17.4285, 44.1871, 8.0),
+    (17.4285, 44.1871, 15.0),
+    (13.1878, 36.842, 15.0),
 ]
 # Face 41 (Plane, area=112.00) — side wall
 f41 = [
-    (25.3122, 29.842, 6.0),
-    (13.1878, 36.842, 6.0),
-    (13.1878, 36.842, 14.0),
-    (25.3122, 29.842, 14.0),
+    (25.3122, 29.842, 8.0),
+    (13.1878, 36.842, 8.0),
+    (13.1878, 36.842, 15.0),
+    (25.3122, 29.842, 15.0),
 ]
 # Face 43 (Plane, area=49.50) — inner chamfer key side
 f43 = [
     (24.3971, 33.257, 3.0),
-    (24.3971, 33.257, 6.0),
-    (16.6029, 37.757, 6.0),
+    (24.3971, 33.257, 8.0),
+    (16.6029, 37.757, 8.0),
     (16.6029, 37.757, 0.0),
     (21.799, 34.757, 0.0),
 ]
 # Face 44 (Plane, area=12.00)
 f44 = [
     (17.6029, 39.4891, 0.0),
-    (17.6029, 39.4891, 6.0),
-    (16.6029, 37.757, 6.0),
+    (17.6029, 39.4891, 8.0),
+    (16.6029, 37.757, 8.0),
     (16.6029, 37.757, 0.0),
 ]
-# Face 45 (Plane, area=49.50) — outer chamfer key side
+# Face 45 — outer side with chamfer notch, full height Z=0..14
 f45 = [
-    (25.3971, 34.9891, 3.0),
-    (25.3971, 34.9891, 6.0),
-    (17.6029, 39.4891, 6.0),
-    (17.6029, 39.4891, 0.0),
     (22.799, 36.4891, 0.0),
+    (25.3971, 34.9891, 3.0),
+    (25.3971, 34.9891, 15.0),
+    (17.6029, 39.4891, 15.0),
+    (17.6029, 39.4891, 0.0),
 ]
-# Face 46 (Plane, area=6.00)
+# Face 46 (Plane, area=8.00)
 f46 = [
     (25.3971, 34.9891, 3.0),
-    (25.3971, 34.9891, 6.0),
-    (24.3971, 33.257, 6.0),
+    (25.3971, 34.9891, 8.0),
+    (24.3971, 33.257, 8.0),
     (24.3971, 33.257, 3.0),
 ]
 # Face 49 (Plane, area=12.00)
@@ -254,21 +254,18 @@ f50 = [
     (25.3971, 34.9891, 3.0),
 ]
 
-# Build 8 faces from constants, pull f43/f45 from STEP
+# Build all faces from vertices
 all_faces_data = [
     ("f35", f35), ("f36", f36), ("f37", f37), ("f41", f41),
-    ("f44", f44), ("f46", f46), ("f49", f49), ("f50", f50),
+    ("f43", f43), ("f44", f44), ("f45", f45), ("f46", f46),
+    ("f49", f49), ("f50", f50),
 ]
 face_wires = []
 for name, verts in all_faces_data:
     pts = [Base.Vector(x, y, z) for x, y, z in verts]
-    edges = [Part.LineSegment(pts[i], pts[(i+1) % len(pts)]).toShape() for i in range(len(pts))]
-    wire = Part.Wire(edges)
-    face_wires.append(Part.Face(wire))
-
-# f43 and f45 pulled directly from STEP (pentagons fail with makePolygon)
-face_wires.append(ref.Shape.Faces[42])  # Face 43
-face_wires.append(ref.Shape.Faces[44])  # Face 45
+    poly = Part.makePolygon(pts + [pts[0]])
+    plane = Part.Plane(pts[0], pts[1], pts[2])
+    face_wires.append(Part.Face(plane, poly))
 
 compound = Part.Compound(face_wires)
 compound.translate(Base.Vector(0, 0, -2.0))
