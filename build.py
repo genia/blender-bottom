@@ -45,8 +45,8 @@ fillet_r = 0.5
 depth    = 3.0     # thread depth inward from bore
 z_start  = 27.5    # top of thread at Z=48, minus 1 turn removed from bottom
 z_len    = 20.5    # threaded portion height
-body_z   = -2.0
-body_len = 40.0
+body_z   = 0.0
+body_len = 39.0
 
 # Build: solid cylinder → cut (bore + thread grooves) = threaded tube
 solid_cyl = Part.makeCylinder(outer_r, body_len,
@@ -118,7 +118,7 @@ print("\n─── Other Cylinders (hollow tubes) ───")
 
 # (name, outer_r, inner_r, z_start, length)
 tubes = [
-    ("Outer Rim",      57.0, 48.0, 40.0, 23.0),
+    ("Outer Rim",      57.0, 48.0, 39, 20.0),
     ("Inner Ring",     47.5, 41.5, 16.0,  1.0),
     ("Inner Shoulder", 47.5, 36.5, 13.0,  3.0),   # solid (inner=0 = no hole)
 ]
@@ -165,7 +165,7 @@ body_outer = Part.makeCylinder(51, 63,
                                 Base.Vector(0, 0, 1))
 
 for i, (cx, cy) in enumerate(rib_positions):
-    cyl = Part.makeCylinder(6.0, 40.0, Base.Vector(cx, cy, 0), Base.Vector(0, 0, 1))
+    cyl = Part.makeCylinder(6.0, 39.0, Base.Vector(cx, cy, 0), Base.Vector(0, 0, 1))
     cyl = cyl.cut(body_outer)  # keep only portion outside main body
     add_part(cyl, f"🔩 External Rib {i+1}  (r=6mm @ {cx:.0f},{cy:.0f})")
     print(f"  Rib {i+1}: @ ({cx:.0f}, {cy:.0f})")
@@ -268,7 +268,7 @@ for name, verts in all_faces_data:
     face_wires.append(Part.Face(plane, poly))
 
 compound = Part.Compound(face_wires)
-compound.translate(Base.Vector(0, 0, -2.0))
+#compound.translate(Base.Vector(0, 0, -2.0))
 add_part(compound, "Bottom Tab")
 print(f"  Built from {len(face_wires)} faces, at Z=-2")
 
