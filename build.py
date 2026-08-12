@@ -146,29 +146,23 @@ for name, outer_r, inner_r, z, length in tubes:
 
 print("\n─── External Ribs ───")
 
-# Positions extracted from the original STEP surface centers
-rib_positions = [
-    (48.0,   0.0),
-    (36.0,  30.5),
-    (36.0, -30.5),
-    ( 8.0,  47.0),
-    ( 8.0, -47.0),
-    (-24.0,  41.0),
-    (-24.0, -41.0),
-    (-45.0,  16.0),
-    (-45.0, -16.0),
-]
+# 9 ribs, starting at 0°, incrementing by 40°, constant radius 48
+rib_angles = [i * 40 for i in range(9)]
+rib_radius = 47.0
 
 # Cutter: main body outer surface — trim ribs flush
 body_outer = Part.makeCylinder(51, 63,
                                 Base.Vector(0, 0, 0),
                                 Base.Vector(0, 0, 1))
 
-for i, (cx, cy) in enumerate(rib_positions):
+for i, angle in enumerate(rib_angles):
+    rad = math.radians(angle)
+    cx = rib_radius * math.cos(rad)
+    cy = rib_radius * math.sin(rad)
     cyl = Part.makeCylinder(6.0, 39.0, Base.Vector(cx, cy, 0), Base.Vector(0, 0, 1))
     cyl = cyl.cut(body_outer)  # keep only portion outside main body
-    add_part(cyl, f"🔩 External Rib {i+1}  (r=6mm @ {cx:.0f},{cy:.0f})")
-    print(f"  Rib {i+1}: @ ({cx:.0f}, {cy:.0f})")
+    add_part(cyl, f"🔩 External Rib {i+1}  (r=6mm @ {angle}°)")
+    print(f"  Rib {i+1}: {angle}° → ({cx:.0f}, {cy:.0f})")
 
 # ═══════════════════════════════════════════════════════
 # ═══════════════════════════════════════════════════════
