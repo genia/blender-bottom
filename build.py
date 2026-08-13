@@ -130,6 +130,15 @@ for name, outer_r, inner_r, z, length in tubes:
         shape = outer
         desc = f"(r={outer_r}mm solid)"
     
+    # 8mm 45° chamfer on inside top of Outer Rim
+    if name == "Outer Rim":
+        top = z + length
+        chamfer = Part.makeCone(inner_r, inner_r + 8, 8,
+                                 Base.Vector(0, 0, top - 8),
+                                 Base.Vector(0, 0, 1))
+        shape = shape.cut(chamfer)
+        desc += " + 8mm chamfer"
+    
     add_part(shape, f"{name}  {desc}")
     print(f"  {name}: outer={outer_r}mm  inner={inner_r}mm  Z={z}→{z+length}mm")
 
