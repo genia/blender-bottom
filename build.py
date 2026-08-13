@@ -36,7 +36,7 @@ pitch    = 6.0
 angle    = 60.0
 fillet_r = 0.5
 depth    = 3.0     # thread depth inward from bore
-z_start  = 27.5    # top of thread at Z=48, minus 1 turn removed from bottom
+z_start  = 25.5    # top of thread at Z=48, minus 1 turn removed from bottom
 z_len    = 20.5    # threaded portion height
 body_z   = 0.0
 body_len = 39.0
