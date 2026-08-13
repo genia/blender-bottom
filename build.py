@@ -11,17 +11,10 @@ from FreeCAD import Base
 
 # ── Paths ──────────────────────────────────────────────
 HERE = os.path.dirname(__file__)
-SRC  = os.path.join(HERE, "3_d_print_model.main_design (1).step")
 OUT  = os.path.join(HERE, "model.FCStd")
 
 # ── Document setup ─────────────────────────────────────
 doc = App.newDocument("Model")
-Import.insert(SRC, doc.Name)
-
-# Hide the raw import — it's our reference only
-ref = doc.Objects[0]
-ref.Visibility = False
-ref.Label = "🔒 Original STEP (reference)"
 
 def add_part(shape, label):
     """Add a Part::Feature to the document with a descriptive label."""
@@ -300,15 +293,6 @@ for verts in [f43, f44, f45, f46, f49, f50]:
 compound = Part.Compound([upper_solid] + lower_faces)
 add_part(compound, "Bottom Tab")
 print(f"  Upper solid cut at r=48 + {len(lower_faces)} chamfer faces")
-
-# ═══════════════════════════════════════════════════════
-#  CHAMFERS
-# ═══════════════════════════════════════════════════════
-
-conical = [f for f in ref.Shape.Faces if 'Cone' in type(f.Surface).__name__]
-if conical:
-    add_part(Part.Compound(conical), "🔺 Chamfers")
-    print(f"\n─── Chamfers ───\n  {len(conical)} conical faces")
 
 # ═══════════════════════════════════════════════════════
 #  SAVE
