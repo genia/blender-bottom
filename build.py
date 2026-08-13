@@ -130,14 +130,21 @@ for name, outer_r, inner_r, z, length in tubes:
         shape = outer
         desc = f"(r={outer_r}mm solid)"
     
-    # 8mm 45° chamfer on inside top of Outer Rim
+    # 8mm 45° chamfer on inside top of Outer Rim + 1mm fillet on remaining cap
     if name == "Outer Rim":
         top = z + length
         chamfer = Part.makeCone(inner_r, inner_r + 8, 8,
                                  Base.Vector(0, 0, top - 8),
                                  Base.Vector(0, 0, 1))
         shape = shape.cut(chamfer)
-        desc += " + 8mm chamfer"
+        # Fillet the chamfer-to-cap edge (r=inner_r+8, Z=top)
+        for e in shape.Edges:
+            c = e.Curve
+            if (hasattr(c, 'Radius') and abs(c.Radius - (inner_r + 8)) < 0.1
+                    and abs(c.Center.z - top) < 0.1):
+                shape = shape.makeFillet(1.0, [e])
+                break
+        desc += " + 8mm chamfer + 1mm fillet"
     
     add_part(shape, f"{name}  {desc}")
     print(f"  {name}: outer={outer_r}mm  inner={inner_r}mm  Z={z}→{z+length}mm")
