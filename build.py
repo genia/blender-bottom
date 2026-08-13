@@ -208,25 +208,25 @@ for i, angle in enumerate(tab_abs_angles):
 print("\n─── Bottom Tab ───")
 
 # Vertex data extracted from original STEP (X, Y, Z in mm)
-# Face 35 (Plane, area=67.85) — side wall
+# Face 35 (Plane, area=67.85) — side wall, outer edge extended +2mm to r=49.5
 f35 = [
     (25.3122, 29.842, 8.0),
-    (29.5529, 37.1871, 8.0),
-    (29.5529, 37.1871, 15.0),
+    (30.7973, 38.7528, 8.0),
+    (30.7973, 38.7528, 15.0),
     (25.3122, 29.842, 15.0),
 ]
-# Face 36 — rectangle closing bottom of the 3 side walls at Z=6
+# Face 36 — bottom face, outer edge extended +2mm to r=49.5
 f36 = [
     (13.1878, 36.842, 8.0),
+    (18.1624, 46.0475, 8.0),
+    (30.7973, 38.7528, 8.0),
     (25.3122, 29.842, 8.0),
-    (29.5529, 37.1871, 8.0),
-    (17.4285, 44.1871, 8.0),
 ]
-# Face 37 (Plane, area=67.85) — side wall
+# Face 37 (Plane, area=67.85) — side wall, outer edge extended +2mm to r=49.5
 f37 = [
     (13.1878, 36.842, 8.0),
-    (17.4285, 44.1871, 8.0),
-    (17.4285, 44.1871, 15.0),
+    (18.1624, 46.0475, 8.0),
+    (18.1624, 46.0475, 15.0),
     (13.1878, 36.842, 15.0),
 ]
 # Face 41 (Plane, area=112.00) — side wall
@@ -281,22 +281,25 @@ f50 = [
     (25.3971, 34.9891, 3.0),
 ]
 
-# Build all faces from vertices
-all_faces_data = [
-    ("f35", f35), ("f36", f36), ("f37", f37), ("f41", f41),
-    ("f43", f43), ("f44", f44), ("f45", f45), ("f46", f46),
-    ("f49", f49), ("f50", f50),
-]
-face_wires = []
-for name, verts in all_faces_data:
+# Upper part: extrude f36 up 7mm, then cut with bore cylinder (r=48)
+f36_pts = [Base.Vector(x, y, z) for x, y, z in f36]
+f36_face = Part.Face(Part.Plane(f36_pts[0], f36_pts[1], f36_pts[2]),
+                     Part.makePolygon(f36_pts + [f36_pts[0]]))
+upper_solid = f36_face.extrude(Base.Vector(0, 0, 7))   # Z=8..15
+bore_cyl = Part.makeCylinder(48, 63, Base.Vector(0, 0, 0), Base.Vector(0, 0, 1))
+upper_solid = upper_solid.common(bore_cyl)
+
+# Lower chamfer faces (f43..f50)
+lower_faces = []
+for verts in [f43, f44, f45, f46, f49, f50]:
     pts = [Base.Vector(x, y, z) for x, y, z in verts]
     poly = Part.makePolygon(pts + [pts[0]])
     plane = Part.Plane(pts[0], pts[1], pts[2])
-    face_wires.append(Part.Face(plane, poly))
+    lower_faces.append(Part.Face(plane, poly))
 
-compound = Part.Compound(face_wires)
+compound = Part.Compound([upper_solid] + lower_faces)
 add_part(compound, "Bottom Tab")
-print(f"  Built from {len(face_wires)} faces, at Z=-2")
+print(f"  Upper solid cut at r=48 + {len(lower_faces)} chamfer faces")
 
 # ═══════════════════════════════════════════════════════
 #  CHAMFERS
