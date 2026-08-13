@@ -165,6 +165,39 @@ for i, angle in enumerate(rib_angles):
     print(f"  Rib {i+1}: {angle}° → ({cx:.0f}, {cy:.0f})")
 
 # ═══════════════════════════════════════════════════════
+#  RECTANGULAR TABS  (3, projecting outward from main body)
+# ═══════════════════════════════════════════════════════
+
+print("\n─── Rectangular Tabs ───")
+
+bottom_tab_angle = 60.0
+tab_rel_angles = [-40, 80, 200]
+tab_abs_angles = [bottom_tab_angle + a for a in tab_rel_angles]
+main_outer_r = 51.0
+tab_proj = 4.0     # projection outside main body
+tab_h = 3.0        # height
+tab_w = 8.0        # width
+tab_z_bottom = 32.0
+
+for i, angle in enumerate(tab_abs_angles):
+    rad = math.radians(angle)
+    mid_r = main_outer_r + tab_proj / 2.0   # 53
+    z_mid = tab_z_bottom + tab_h / 2.0       # 33.5
+    center = Base.Vector(mid_r * math.cos(rad), mid_r * math.sin(rad), z_mid)
+    
+    # Box extends inward so cut at r=51 leaves a curved inner face
+    box = Part.makeBox(tab_proj + 4, tab_w, tab_h)   # X=radial (extra 4 inward)
+    rot = App.Rotation(Base.Vector(0, 0, 1), angle)
+    local_center = Base.Vector((tab_proj + 4)/2, tab_w/2, tab_h/2)
+    pos = center - rot.multVec(local_center)
+    box.Placement = Base.Placement(pos, rot)
+    
+    # Cut with main body cylinder (r=51) so near corners sit exactly at r=51
+    tab = box.cut(body_outer)
+    add_part(tab, f"▭ Rectangular Tab {i+1}  @ {angle}°")
+    print(f"  Tab {i+1}: {angle}° (r={main_outer_r}..{main_outer_r+tab_proj}, Z={tab_z_bottom}..{tab_z_bottom+tab_h})")
+
+# ═══════════════════════════════════════════════════════
 # ═══════════════════════════════════════════════════════
 #  BOTTOM TAB  (at 60°, extracted from planar face cluster)
 # ═══════════════════════════════════════════════════════
@@ -262,7 +295,6 @@ for name, verts in all_faces_data:
     face_wires.append(Part.Face(plane, poly))
 
 compound = Part.Compound(face_wires)
-#compound.translate(Base.Vector(0, 0, -2.0))
 add_part(compound, "Bottom Tab")
 print(f"  Built from {len(face_wires)} faces, at Z=-2")
 
