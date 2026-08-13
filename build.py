@@ -144,7 +144,14 @@ for name, outer_r, inner_r, z, length in tubes:
                     and abs(c.Center.z - top) < 0.1):
                 shape = shape.makeFillet(1.0, [e])
                 break
-        desc += " + 8mm chamfer + 1mm fillet"
+        # Fillet outside-to-cap edge (r=outer_r, Z=top), 0.5mm
+        for e in shape.Edges:
+            c = e.Curve
+            if (hasattr(c, 'Radius') and abs(c.Radius - outer_r) < 0.1
+                    and abs(c.Center.z - top) < 0.1):
+                shape = shape.makeFillet(0.5, [e])
+                break
+        desc += " + 8mm chamfer + 1mm & 0.5mm fillets"
     
     add_part(shape, f"{name}  {desc}")
     print(f"  {name}: outer={outer_r}mm  inner={inner_r}mm  Z={z}→{z+length}mm")
