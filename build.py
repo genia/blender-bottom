@@ -119,8 +119,8 @@ print("\n─── Other Cylinders (hollow tubes) ───")
 # (name, outer_r, inner_r, z_start, length)
 tubes = [
     ("Outer Rim",      57.0, 48.0, 39, 20.0),
-    ("Inner Ring",     47.5, 41.5, 16.0,  1.0),
-    ("Inner Shoulder", 47.5, 36.5, 13.0,  3.0),   # solid (inner=0 = no hole)
+    ("Inner Ring",     48.0, 41.5, 16.0,  1.0),
+    ("Inner Shoulder", 48.0, 36.5, 13.0,  3.0),   # solid (inner=0 = no hole)
 ]
 
 for name, outer_r, inner_r, z, length in tubes:
